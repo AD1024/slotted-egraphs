@@ -89,5 +89,5 @@ fn t6() {
 fn extract_all() {
     let rewrites = get_all_rewrites();
     let expr = &format!("(mul (add (var $x) (var $y)) (add (var $y) (var $x)))");
-    try_extract_all(expr, &rewrites[..], 10);
+    try_extract_all(expr, &rewrites[..], 10, 5);
 }

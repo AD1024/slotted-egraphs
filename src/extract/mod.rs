@@ -136,7 +136,7 @@ where
         Self { store }
     }
 
-    pub fn extract<N: Analysis<L>>(&self, i: &AppliedId, eg: &EGraph<L, N>) -> Vec<RecExpr<L>> {
+    pub fn extract<N: Analysis<L>>(&self, i: &AppliedId, eg: &EGraph<L, N>, beam_size: usize) -> Vec<RecExpr<L>> {
         // need a cartesian product over children
         let i = eg.find_applied_id(i);
         let mut out = Vec::new();
@@ -145,9 +145,9 @@ where
             let l = enode.apply_slotmap(&i.m);
             let children_list = l.applied_id_occurrences()
                 .iter()
-                .map(|child| self.extract(child, eg))
+                .map(|child| self.extract(child, eg, beam_size))
                 .collect::<Vec<_>>();
-            for children_comb in Itertools::multi_cartesian_product(children_list.iter()) {
+            for children_comb in Itertools::multi_cartesian_product(children_list.iter()).take(beam_size) {
                 let children = children_comb
                         .iter()
                         .map(|&x| x.clone())

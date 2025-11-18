@@ -132,7 +132,7 @@ where
     assert!(false);
 }
 
-fn try_extract_all<L, N>(expr: &str, rewrites: &[Rewrite<L, N>], steps: usize)
+fn try_extract_all<L, N>(expr: &str, rewrites: &[Rewrite<L, N>], steps: usize, beam_size: usize)
 where
     L: Language + 'static,
     N: Analysis<L> + Default + 'static,
@@ -149,7 +149,7 @@ where
 
     let extractor = ExtractAll::new(&runner.egraph);
     let id = lookup_rec_expr(&start, &runner.egraph).unwrap();
-    let exprs = extractor.extract(&id, &runner.egraph);
+    let exprs = extractor.extract(&id, &runner.egraph, beam_size);
     let mut pretty_printed = HashSet::new();
     for e in &exprs {
         // check that they are all equivalent
