@@ -84,3 +84,10 @@ fn t6() {
     let b = &format!("(mul (var {z}) (add (var {y}) (var {x})))");
     assert_reaches(a, b, &[add_comm()], 10);
 }
+
+#[test]
+fn extract_all() {
+    let rewrites = get_all_rewrites();
+    let expr = &format!("(mul (add (var $x) (var $y)) (add (var $y) (var $x)))");
+    try_extract_all(expr, &rewrites[..], 10);
+}

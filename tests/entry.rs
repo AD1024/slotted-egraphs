@@ -1,4 +1,5 @@
 pub use slotted_egraphs::*;
+use std::collections::HashSet;
 pub use std::hash::Hash;
 
 mod arith;
@@ -129,4 +130,39 @@ where
     // or it saturated before then
     runner.egraph.dump();
     assert!(false);
+}
+
+fn try_extract_all<L, N>(expr: &str, rewrites: &[Rewrite<L, N>], steps: usize)
+where
+    L: Language + 'static,
+    N: Analysis<L> + Default + 'static,
+{
+    let start: RecExpr<L> = RecExpr::parse(expr).unwrap();
+
+    let mut runner: Runner<L, N, (), ReachError> = Runner::default()
+        .with_expr(&start)
+        .with_iter_limit(60)
+        .with_iter_limit(steps);
+    let report = runner.run(rewrites);
+
+    dbg!(&report.stop_reason);
+
+    let extractor = ExtractAll::new(&runner.egraph);
+    let id = lookup_rec_expr(&start, &runner.egraph).unwrap();
+    let exprs = extractor.extract(&id, &runner.egraph);
+    let mut pretty_printed = HashSet::new();
+    for e in &exprs {
+        // check that they are all equivalent
+        let i2 = lookup_rec_expr(e, &runner.egraph).unwrap();
+        assert!(runner.egraph.eq(&id, &i2));
+        pretty_printed.insert(e.to_string());
+    }
+
+    // no duplicates
+    assert!(pretty_printed.len() == exprs.len(), "{} distinct vs {} extracted", pretty_printed.len(), exprs.len());
+
+    println!("\n=== Extracted {} expressions ===", exprs.len());
+    for (i, e) in pretty_printed.iter().enumerate() {
+        println!("{}: {}", i + 1, e);
+    }
 }
