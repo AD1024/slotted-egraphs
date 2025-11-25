@@ -136,12 +136,15 @@ where
         Self { store }
     }
 
-    pub fn extract<N: Analysis<L>>(&self, i: &AppliedId, eg: &EGraph<L, N>, beam_size: usize) -> Vec<RecExpr<L>> {
-        // need a cartesian product over children
+    fn extract_impl(&self, i: &AppliedId, eg: &EGraph<L, impl Analysis<L>>, beam_size: usize, visited: &mut HashSet<AppliedId>) -> Vec<RecExpr<L>> {
         let i = eg.find_applied_id(i);
+        if visited.contains(&i) {
+            return Vec::new();
+        }
+        visited.insert(i.clone());
         let mut out = Vec::new();
 
-        for enode in &self.store[&i.id] {
+        for enode in self.store[&i.id].iter().take(beam_size) {
             let l = enode.apply_slotmap(&i.m);
             let children_list = l.applied_id_occurrences()
                 .iter()
@@ -160,7 +163,13 @@ where
                 }
             }
         }
+        visited.remove(&i);
         out
+    }
+
+    pub fn extract<N: Analysis<L>>(&self, i: &AppliedId, eg: &EGraph<L, N>, beam_size: usize) -> Vec<RecExpr<L>> {
+        // need a cartesian product over children
+        self.extract_impl(i, eg, beam_size, &mut HashSet::default())
     }
 }
 
