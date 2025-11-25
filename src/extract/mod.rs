@@ -148,7 +148,7 @@ where
             let l = enode.apply_slotmap(&i.m);
             let children_list = l.applied_id_occurrences()
                 .iter()
-                .map(|child| self.extract(child, eg, beam_size))
+                .map(|child| self.extract_impl(child, eg, beam_size, visited))
                 .collect::<Vec<_>>();
             for children_comb in Itertools::multi_cartesian_product(children_list.iter()).take(beam_size) {
                 let children = children_comb
